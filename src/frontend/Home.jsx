@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import toast, { Toaster } from "react-hot-toast";
 import Swal from "sweetalert2";
+import { BASE_URL } from "../lib/utils";
 
-const URL = "http://localhost:5000/api/notes";
+const URL = `${BASE_URL}/api/notes`;
 
 export default function Home() {
   const [title, setTitle] = useState("");

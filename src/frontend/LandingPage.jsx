@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import NoteCard from "../components/NoteCard";
+import { BASE_URL } from "../lib/utils";
 
-const URL = "http://localhost:5000/api/notes";
+const URL = `${BASE_URL}/api/notes`;
 
 export default function LandingPage() {
   const [notes, setNotes] = useState([]);
