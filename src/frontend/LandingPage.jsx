@@ -3,38 +3,63 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import NoteCard from "../components/NoteCard";
 
+const URL = "http://localhost:5000/api/notes";
+
 export default function LandingPage() {
   const [notes, setNotes] = useState([]);
   const [filter, setFilter] = useState("");
   const [sort, setSort] = useState("");
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Fetch all notes from Express Backend
   useEffect(() => {
-    const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
-    setNotes(savedNotes);
+    fetch(URL)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch notes");
+        return res.json();
+      })
+      .then((data) => {
+        setNotes(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
-  // Updated Filter & Sorting Logic
-
-  // const cleanFilter = filter.trim().toLowerCase();
+  // Filter & Sorting Logic
   const processedNotes = notes
     .filter(
       (n) =>
         n.title.toLowerCase().includes(filter.toLowerCase()) ||
-        n.body.toLowerCase().includes(filter.toLowerCase()),
+        n.body.toLowerCase().includes(filter.toLowerCase())
     )
+    // .sort((a, b) => {
+    //   if (sort === "1") {
+    //     return a.title.localeCompare(b.title);
+    //   }
+    //   if (sort === "2") {
+    //     return (b.updatedAt || 0) - (a.updatedAt || 0);
+    //   }
+    //   if (sort === "3") {
+    //     return (b.createdAt || 0) - (a.createdAt || 0);
+    //   }
+    //   return 0;
+    // });
     .sort((a, b) => {
-      if (sort === "1") {
-        return a.title.localeCompare(b.title);
-      }
-      if (sort === "2") {
-        return (b.updatedAt || 0) - (a.updatedAt || 0);
-      }
-      if (sort === "3") {
-        return (b.createdAt || 0) - (a.createdAt || 0);
-      }
-      return 0;
-    });
+  if (sort === "1") {
+    return a.title.localeCompare(b.title);
+  }
+  if (sort === "2") {
+    return new Date(b.updatedAt) - new Date(a.updatedAt);
+  }
+  if (sort === "3") {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  }
+  return 0;
+});
 
   return (
     <div>
@@ -44,13 +69,13 @@ export default function LandingPage() {
         <input
           type="text"
           placeholder="Filter by"
-          className="bg-white p-2 rounded"
+          className="bg-white p-2 rounded outline-none"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
 
         <select
-          className="p-2 rounded bg-white outline-none "
+          className="p-2 rounded bg-white outline-none"
           value={sort}
           onChange={(e) => setSort(e.target.value)}
         >
@@ -62,19 +87,25 @@ export default function LandingPage() {
       </nav>
 
       {/* Notes List */}
-      <div className="flex flex-col items-center mt-6 px-4">
-        {processedNotes.map((note) => (
-          <NoteCard
-            key={note.id}
-            note={note}
-            onClick={() => navigate(`/home?id=${note.id}`)}
-          />
-        ))}
+      <div className="flex flex-col items-center mt-6 px-4 gap-4">
+        {loading ? (
+          <p className="text-[#437993] text-lg font-semibold">Loading Notes...</p>
+        ) : processedNotes.length === 0 ? (
+          <p className="text-gray-500 text-lg">No notes found.</p>
+        ) : (
+          processedNotes.map((note) => (
+            <NoteCard
+              key={note._id}
+              note={note}
+              onClick={() => navigate(`/home?id=${note._id}`)} // Fixed: note._id
+            />
+          ))
+        )}
       </div>
 
       <button
         onClick={() => navigate("/home")}
-        className="bg-[#437993] fixed bottom-6 right-6 hover:opacity-90 text-white p-5 rounded-lg cursor-pointer shadow-lg"
+        className="bg-[#437993] fixed bottom-6 right-6 hover:opacity-90 text-white p-5 rounded-lg cursor-pointer shadow-lg font-medium"
       >
         Create New Note
       </button>

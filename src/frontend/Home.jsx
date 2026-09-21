@@ -3,52 +3,60 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import toast, { Toaster } from "react-hot-toast";
 import Swal from "sweetalert2";
+
 const URL = "http://localhost:5000/api/notes";
 
 export default function Home() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [processingAPI, setProcessingAPI] = useState(false);
+
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const noteId = searchParams.get("id"); //agar URL (/home?id=101) hai to noteId mein 101 bajyn gy agarURL (/home) hai to null bajyn gy
+  const noteId = searchParams.get("id");
 
-  // useEffect(() => {
-  //   //jab b noteId change ho
-  //   if (noteId) {
-  //     const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
-  //     const singleNote = savedNotes.find((n) => n.id === noteId);
-  //     if (singleNote) {
-  //       setTitle(singleNote.title);
-  //       setBody(singleNote.body);
-  //     }
-  //   }
-  // }, [noteId]);
 
+
+
+  // Fetch Single Note when noteId is available in URL
   useEffect(() => {
     if (noteId) {
+      setLoading(true);
       fetch(`${URL}/${noteId}`)
         .then((res) => {
-          if (!res.ok) 
+          if (!res.ok) {
             throw new Error("Note not found");
+          }
           return res.json();
         })
         .then((data) => {
           setTitle(data.title);
           setBody(data.body);
+          setLoading(false);
         })
-        .catch((err) => toast.error(err.message));
+        .catch((err) => {
+          toast.error(err.message);
+          setLoading(false);
+        });
+    } else {
+      setTitle("");
+      setBody("");
     }
   }, [noteId]);
 
 
 
 
+
+  // Create Note
   const handleAddNote = async () => {
     if (!title.trim() || !body.trim()) {
-      toast.error("Empty Notes is not allowed");
+      toast.error("Empty Notes are not allowed");
       return;
     }
+    setProcessingAPI(true);
     try {
       const response = await fetch(URL, {
         method: "POST",
@@ -57,7 +65,8 @@ export default function Home() {
       });
 
       if (response.ok) {
-        toast.success("Note added successfully");
+        setTitle("");
+        setBody("");
         navigate("/");
       } else {
         const errText = await response.text();
@@ -65,20 +74,21 @@ export default function Home() {
       }
     } catch (error) {
       toast.error("Server connection failed");
+    }finally{
+      setProcessingAPI(false);
     }
   };
 
-  // const handleUpdateNote = () => {
-  //   const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
-  //   const updatedNotes = savedNotes.map((n) =>
-  //     n.id === noteId ? { ...n, title, body, updatedAt: Date.now() } : n,
-  //   );
 
-  //   localStorage.setItem("notes", JSON.stringify(updatedNotes));
-  //   navigate("/");
-  // };
 
+
+
+  // Update Note
   const handleUpdateNote = () => {
+    if(!title || !body) {
+      toast.error("Title or body can't be empty")
+      return;
+    }
     Swal.fire({
       title: "Are you sure?",
       text: "Do you want to update this note?",
@@ -86,30 +96,34 @@ export default function Home() {
       showCancelButton: true,
       confirmButtonText: "Yes, update it",
       cancelButtonText: "No",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
+        try {
+          const response = await fetch(`${URL}/${noteId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, body }),
+          });
 
-        const updatedNotes = savedNotes.map((n) =>
-          n.id === noteId ? { ...n, title, body, updatedAt: Date.now() } : n,
-        );
-
-        localStorage.setItem("notes", JSON.stringify(updatedNotes));
-
-        navigate("/");
-      } else if (result.isDenied)
-        Swal.fire("Changes are not saved", "", "info");
+          if (response.ok) {
+            navigate("/");
+          } else {
+            const errText = await response.text();
+            toast.error(errText);
+          }
+        } catch (error) {
+          toast.error("Server connection failed");
+        }
+      }
     });
   };
 
-  // const handleDeleteNote = () => {
-  //   const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
-  //   const filteredNotes = savedNotes.filter((n) => n.id !== noteId);
 
-  //   localStorage.setItem("notes", JSON.stringify(filteredNotes));
-  //   navigate("/");
-  // };
 
+
+
+
+  // Delete Note
   const handleDeleteNote = () => {
     Swal.fire({
       title: "Are you sure?",
@@ -119,21 +133,28 @@ export default function Home() {
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "No, cancel!",
       reverseButtons: true,
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
+        try {
+          const response = await fetch(`${URL}/${noteId}`, {
+            method: "DELETE",
+          });
 
-        const filteredNotes = savedNotes.filter((n) => n.id !== noteId);
-
-        localStorage.setItem("notes", JSON.stringify(filteredNotes));
-
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your note has been deleted.",
-          icon: "success",
-        }).then(() => {
-          navigate("/");
-        });
+          if (response.ok) {
+            Swal.fire({
+              title: "Deleted!",
+              text: "Your note has been deleted.",
+              icon: "success",
+            }).then(() => {
+              navigate("/");
+            });
+          } else {
+            const errText = await response.text();
+            toast.error(errText);
+          }
+        } catch (error) {
+          toast.error("Server connection failed");
+        }
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         Swal.fire({
           title: "Cancelled",
@@ -158,49 +179,56 @@ export default function Home() {
       </nav>
 
       <main className="flex flex-col gap-4 mt-4">
-        <div className="max-w-[1920px] flex flex-col justify-center items-center gap-4">
-          <input
-            type="text"
-            placeholder="Type Your Notes Title"
-            className="bg-[#F7F7F7] w-full max-w-175 p-3 rounded text-[20px] outline-none"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+        {loading ? (
+          <div className="text-center text-xl text-[#437993]">Loading Note...</div>
+        ) : (
+          <>
+            <div className="max-w-[1920px] flex flex-col justify-center items-center gap-4">
+              <input
+                type="text"
+                placeholder="Type Your Notes Title"
+                className="bg-[#F7F7F7] w-full max-w-175 p-3 rounded text-[20px] outline-none"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
 
-          <textarea
-            placeholder="Type Your Notes Body"
-            className="bg-[#F7F7F7] w-full max-w-175 p-3 rounded text-[20px] outline-none"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
-        </div>
+              <textarea
+                placeholder="Type Your Notes Body"
+                className="bg-[#F7F7F7] w-full max-w-175 p-3 rounded text-[20px] outline-none"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+              />
+            </div>
 
-        <div className="max-w-175 w-full mx-auto flex justify-between">
-          {!noteId ? (
-            <button
-              onClick={handleAddNote}
-              className="bg-[#437993] p-3 rounded-lg cursor-pointer hover:opacity-90 text-white mt-3"
-            >
-              Add Notes
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={handleUpdateNote}
-                className="bg-[#437993] p-3 rounded-lg cursor-pointer hover:opacity-90 text-white mt-3"
-              >
-                Update
-              </button>
+            <div className="max-w-175 w-full mx-auto flex justify-between">
+              {!noteId ? (
+                <button
+                  disabled={processingAPI}
+                  onClick={handleAddNote}
+                  className="bg-[#437993] p-3 rounded-lg cursor-pointer hover:opacity-90 text-white mt-3"
+                >
+                  Add Notes
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleUpdateNote}
+                    className="bg-[#437993] p-3 rounded-lg cursor-pointer hover:opacity-90 text-white mt-3"
+                  >
+                    Update
+                  </button>
 
-              <button
-                onClick={handleDeleteNote}
-                className="bg-[#437993] p-3 rounded-lg cursor-pointer hover:opacity-90 text-white mt-3"
-              >
-                Delete
-              </button>
-            </>
-          )}
-        </div>
+                  <button
+                    onClick={handleDeleteNote}
+                    className="bg-[#437993] p-3 rounded-lg cursor-pointer hover:opacity-90 text-white mt-3"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

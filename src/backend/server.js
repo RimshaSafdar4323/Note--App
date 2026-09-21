@@ -1,262 +1,125 @@
-// const express = require("express");
-// const Joi = require("joi");
-// const app = express();
-
-
-// app.use(express.json());
-
-// let notes = [
-//     {
-//         id: "1",
-//         title:"Summary",
-//         body:["Day1","Day2","Day3"],
-//         createdAt: Date.now(),
-//         updatedAt: Date.now()
-//     },
-//     {
-//         id: "2",
-//         title:"Summary1",
-//         body:["Day4","Day5","Day6"],
-//         createdAt: Date.now(),
-//         updatedAt: Date.now()
-//     },
-//     {
-//         id: "3",
-//         title:"Summary2",
-//         body:["Day7","Day8","Day9"],
-//         createdAt: Date.now(),
-//         updatedAt: Date.now()
-//     }
-// ];
-// // // Joi Validation Function
-// // function validateNote(note) {
-// //   const schema = Joi.object({
-// //     title: Joi.string().min(1).required(),
-// //     body: Joi.string().min(1).required(),
-// //   });
-// //   return schema.validate(note);
-// // }
-
-// function validateNote(note) {
-//   const schema = Joi.object({
-//     title: Joi.string().min(1).required(),
-//     body: Joi.array().items(Joi.string()).min(1).required(), // array bana do
-//   });
-//   return schema.validate(note);
-// }
-
-// // GET all notes
-// app.get("/api/notes", (req, res) => {
-//   res.send(notes);
-// });
-
-// // GET single note by ID
-// app.get("/api/notes/:id", (req, res) => {
-//   const note = notes.find((n) => n.id === req.params.id);
-//   if (!note) return res.status(404).send("Note not found");
-//   res.send(note);
-// });
-
-// // POST new note
-// app.post("/api/notes", (req, res) => {
-//   const { error } = validateNote(req.body);
-//   if (error) return res.status(400).send(error.details[0].message);
-
-//   const currentTime = Date.now();
-//   const newNote = {
-//     id: currentTime.toString(),
-//     title: req.body.title,
-//     body: req.body.body,
-//     createdAt: currentTime,
-//     updatedAt: currentTime,
-//   };
-
-//   notes.push(newNote);
-//   res.send(newNote);
-// });
-
-// // PUT (Update) note
-// app.put("/api/notes/:id", (req, res) => {
-//   const note = notes.find((n) => n.id === req.params.id);
-//   if (!note) return res.status(404).send("Note not found");
-
-//   const { error } = validateNote(req.body);
-//   if (error) return res.status(400).send(error.details[0].message);
-
-//   note.title = req.body.title;
-//   note.body = req.body.body;
-//   note.updatedAt = Date.now();
-
-//   res.send(note);
-// });
-
-// // DELETE note
-// // app.delete("/api/notes/:id", (req, res) => {
-// //   const note = notes.find((n) => n.id === req.params.id);
-// //   if (!note) return res.status(404).send("Note not found");
-
-// //   const index = notes.indexOf(note);
-// //   notes.splice(index, 1);
-
-// //   res.send(note);
-// // });
-
-
-// // DELETE note
-// app.delete("/api/notes/:id", (req, res) => {
-//   const index = notes.findIndex((n) => n.id === req.params.id);
-//   if (index === -1) return res.status(404).send("Note not found");
-
-//   const deletedNote = notes.splice(index, 1)[0]; // splice array return karta hai
-//   res.send(deletedNote);
-// });
-
-// const port = process.env.PORT || 5000;
-// app.listen(port, () => console.log(`Listening on port ${port}...`));
-
-
-
 import express from "express";
 import Joi from "joi";
-import cors from "cors"; 
+import cors from "cors";
+import mongoose from "mongoose";
 
+// MongoDB connection
+mongoose
+  .connect("mongodb://localhost:27017/notesdb")
+  .then(() => console.log("Connected to MongoDB successfully..."))
+  .catch((err) => console.error("Could not connect to MongoDB:", err));
 
 const app = express();
-app.use(cors());
 
+app.use(cors());
 app.use(express.json());
 
+//let notes = [];
 
-let notes = [
-    {
-        id: "1",
-        title:"Summary",
-        body:["Day1","Day2","Day3"],
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-    },
-    {
-        id: "2",
-        title:"Summary1",
-        body:["Day4","Day5","Day6"],
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-    },
-    {
-        id: "3",
-        title:"Summary2",
-        body:["Day7","Day8","Day9"],
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-    }
-];
+const noteSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    body: { type: String, required: true },
+  },
+  { timestamps: true } // MongoDB automatically 'createdAt' aur 'updatedAt' handle kar le ga
+);
 
-
-
-// function validateNote(note) {
-//   const schema = Joi.object({
-//     title: Joi.string().min(1).required(),
-//     body: Joi.array().items(Joi.string()).min(1).required(),
-//   });
-//   return schema.validate(note);
-// }
+const Note = mongoose.model("Note", noteSchema);
 
 function validateNote(note) {
   const schema = Joi.object({
     title: Joi.string().min(1).required(),
-    body: Joi.string().min(1).required(), // <-- array ki jagah string
+    body: Joi.string().min(1).required(),
   });
   return schema.validate(note);
 }
 
 
 // GET all notes
-app.get("/api/notes", (req, res) => {
-  res.send(notes);
+
+
+app.get("/api/notes", async (req, res) => {
+  try {
+    const notes = await Note.find();
+    res.send(notes);
+  } catch (err) {
+    res.status(500).send("Error fetching notes");
+  }
 });
 
-// GET single note by ID
-app.get("/api/notes/:id", (req, res) => {
-  const note = notes.find((n) => n.id === req.params.id);
-  if (!note) 
-    return res.status(404).send("Note not found");
-  res.send(note);
+// // GET single note by ID
+
+app.get("/api/notes/:id", async (req, res) => {
+  try {
+    const note = await Note.findById(req.params.id);
+    if (!note) return res.status(404).send("Note not found");
+    res.send(note);
+  } catch (err) {
+    res.status(400).send("Invalid ID format");
+  }
 });
-
-
 
 
 // // POST new note
-// app.post("/api/notes", (req, res) => {
-//   const { error } = validateNote(req.body);
-//   if (error) 
-//     return res.status(400).send(error.details[0].message);
 
-//   const currentTime = Date.now();
-//   const newNote = {
-//     id: currentTime.toString(),
-//     title: req.body.title,
-//     body: req.body,
-//     createdAt: currentTime,
-//     updatedAt: currentTime,
-//   };
-
-//   notes.push(newNote);
-//   res.send(newNote);
-// });
-
-
-// // POST new note
-app.post("/api/notes", (req, res) => {
-  const { error } = validateNote(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
-  const currentTime = Date.now();
-  const newNote = {
-    id: currentTime.toString(),
-    title: req.body.title,
-    body: req.body.body,
-    createdAt: currentTime,
-    updatedAt: currentTime,
-  };
-
-  notes.push(newNote);
-  res.send(newNote);
-});
-
-
-
-// PUT (Update) note
-app.put("/api/notes/:id", (req, res) => {
-  const note = notes.find((n) => n.id === req.params.id);
-  if (!note) 
-    return res.status(404).send("Note not found");
-
-  const { error } = validateNote(req.body);
-  if (error) 
+app.post("/api/notes", async (req,res)=>{
+  const {error} = validateNote(req.body);
+  if(error) 
     return res.status(400).send(error.details[0].message);
+  try{
+    const newNote= new Note({
+      title:req.body.title,
+      body: req.body.body,
+    });
 
-  note.title = req.body.title;
-  note.body = req.body.body;
-  note.updatedAt = Date.now();
-
-  res.send(note);
+    await newNote.save();
+    res.send(newNote);
+  }catch(err){
+    res.status(500).send("Error in Creating Note");
+  }
 });
+
+
+// // PUT (Update) note
+
+app.put("/api/notes/:id", async(req,res)=>{
+  const {error} = validateNote(req.body);
+  if(error) return res.status(400).send(error.details[0].message);
+
+  try{
+    const updatedNote = await Note.findByIdAndUpdate(
+      req.params.id,
+      {
+        title: req.body.title,
+        body: req.body.body
+      },
+      {
+        new:true
+      }
+    );
+    if(!updatedNote)
+      return res.status(404).send("Note Not Found");
+    res.send(updatedNote);
+  }catch(err){
+    res.status(400).send("Error Updating Note");
+  }
+})
 
 
 
 
 // DELETE note
-app.delete("/api/notes/:id", (req, res) => {
-  const index = notes.findIndex((n) => n.id === req.params.id);
-  if (index === -1) 
-    return res.status(404).send("Note not found");
 
-  const deletedNote = notes.splice(index, 1)[0];
-  res.send(deletedNote);
-});
-
-
+app.delete("/api/notes/:id", async (req,res)=>{
+  try{
+    const deletedNote= await Note.findByIdAndDelete(req.params.id);
+    if(!deletedNote)
+      return res.status(404).send("Note not found");
+    res.send(deletedNote); 
+  }catch(err){
+    res.status(400).send("Error in deleting note");
+  }
+})
 
 
 const port = process.env.PORT || 5000;
