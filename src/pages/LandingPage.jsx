@@ -37,18 +37,6 @@ export default function LandingPage() {
         n.title.toLowerCase().includes(filter.toLowerCase()) ||
         n.body.toLowerCase().includes(filter.toLowerCase())
     )
-    // .sort((a, b) => {
-    //   if (sort === "1") {
-    //     return a.title.localeCompare(b.title);
-    //   }
-    //   if (sort === "2") {
-    //     return (b.updatedAt || 0) - (a.updatedAt || 0);
-    //   }
-    //   if (sort === "3") {
-    //     return (b.createdAt || 0) - (a.createdAt || 0);
-    //   }
-    //   return 0;
-    // });
     .sort((a, b) => {
   if (sort === "1") {
     return a.title.localeCompare(b.title);
