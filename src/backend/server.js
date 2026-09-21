@@ -2,10 +2,12 @@ import express from "express";
 import Joi from "joi";
 import cors from "cors";
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+dotenv.config();
 
 // MongoDB connection
 mongoose
-  .connect("mongodb://localhost:27017/notesdb")
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to MongoDB successfully..."))
   .catch((err) => console.error("Could not connect to MongoDB:", err));
 
