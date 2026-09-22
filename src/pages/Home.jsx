@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import toast, { Toaster } from "react-hot-toast";
 import Swal from "sweetalert2";
 import { BASE_URL } from "../lib/utils";
+import { useAuthContext } from "../hooks/useAuthContext";
 
 const URL = `${BASE_URL}/api/notes`;
 
@@ -18,34 +19,66 @@ export default function Home() {
   const [searchParams] = useSearchParams();
   const noteId = searchParams.get("id");
 
+  const { user } = useAuthContext();
+
 
 
 
   // Fetch Single Note when noteId is available in URL
+  // useEffect(() => {
+  //   if (noteId) {
+  //     setLoading(true);
+  //     fetch(`${URL}/${noteId}`)
+  //       .then((res) => {
+  //         if (!res.ok) {
+  //           throw new Error("Note not found");
+  //         }
+  //         return res.json();
+  //       })
+  //       .then((data) => {
+  //         setTitle(data.title);
+  //         setBody(data.body);
+  //         setLoading(false);
+  //       })
+  //       .catch((err) => {
+  //         toast.error(err.message);
+  //         setLoading(false);
+  //       });
+  //   } else {
+  //     setTitle("");
+  //     setBody("");
+  //   }
+  // }, [noteId]);
+
   useEffect(() => {
-    if (noteId) {
-      setLoading(true);
-      fetch(`${URL}/${noteId}`)
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error("Note not found");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          setTitle(data.title);
-          setBody(data.body);
-          setLoading(false);
-        })
-        .catch((err) => {
-          toast.error(err.message);
-          setLoading(false);
-        });
-    } else {
-      setTitle("");
-      setBody("");
-    }
-  }, [noteId]);
+  if (noteId && user) {
+    setLoading(true);
+
+    fetch(`${URL}/${noteId}`, {
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Note not found");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setTitle(data.title);
+        setBody(data.body);
+        setLoading(false);
+      })
+      .catch((err) => {
+        toast.error(err.message);
+        setLoading(false);
+      });
+  } else if (!noteId) {
+    setTitle("");
+    setBody("");
+  }
+}, [noteId, user]);
 
 
 
@@ -61,14 +94,14 @@ export default function Home() {
     try {
       const response = await fetch(URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.token}` },
         body: JSON.stringify({ title, body }),
       });
 
       if (response.ok) {
         setTitle("");
         setBody("");
-        navigate("/");
+        navigate("/landing");
       } else {
         const errText = await response.text();
         toast.error(errText);
@@ -102,12 +135,12 @@ export default function Home() {
         try {
           const response = await fetch(`${URL}/${noteId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" , "Authorization": `Bearer ${user.token}`},
             body: JSON.stringify({ title, body }),
           });
 
           if (response.ok) {
-            navigate("/");
+            navigate("/landing");
           } else {
             const errText = await response.text();
             toast.error(errText);
@@ -126,6 +159,10 @@ export default function Home() {
 
   // Delete Note
   const handleDeleteNote = () => {
+    if(!user){
+      toast.error("You must be logged in to delete a note");
+      return;
+    }
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -139,6 +176,7 @@ export default function Home() {
         try {
           const response = await fetch(`${URL}/${noteId}`, {
             method: "DELETE",
+            headers: { "Authorization": `Bearer ${user.token}` },
           });
 
           if (response.ok) {
@@ -147,7 +185,7 @@ export default function Home() {
               text: "Your note has been deleted.",
               icon: "success",
             }).then(() => {
-              navigate("/");
+              navigate("/landing");
             });
           } else {
             const errText = await response.text();
@@ -172,7 +210,7 @@ export default function Home() {
       <Toaster />
       <nav className="bg-[#F7F7F7] text-[18px] flex justify-center py-4">
         <div
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/landing")}
           className="max-w-175 w-full hover:text-[#437993] cursor-pointer"
         >
           Home

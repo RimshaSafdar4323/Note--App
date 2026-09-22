@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import NoteCard from "../components/NoteCard";
 import { BASE_URL } from "../lib/utils";
+import { useAuthContext } from "../hooks/useAuthContext";
+import { useLogout } from "../hooks/useLogout";
 
 const URL = `${BASE_URL}/api/notes`;
 
@@ -12,23 +14,53 @@ export default function LandingPage() {
   const [sort, setSort] = useState("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+    const { logout } = useLogout();
+    const handleLogout = () => {
+      logout();
+    }
 
   // Fetch all notes from Express Backend
+  // useEffect(() => {
+  //   fetch(URL)
+  //     .then((res) => {
+  //       if (!res.ok) throw new Error("Failed to fetch notes");
+  //       return res.json();
+  //     })
+  //     .then((data) => {
+  //       setNotes(data);
+  //       setLoading(false);
+  //     })
+  //     .catch((err) => {
+  //       console.error(err);
+  //       setLoading(false);
+  //     });
+  // }, []);
+
   useEffect(() => {
-    fetch(URL)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch notes");
-        return res.json();
-      })
-      .then((data) => {
-        setNotes(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  fetch(URL, {
+    headers: {
+      Authorization: `Bearer ${user.token}`,
+    },
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch notes");
+      return res.json();
+    })
+    .then((data) => {
+      setNotes(data);
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.error(err);
+      setLoading(false);
+    });
+    if(user){
+      navigate("/landing");
+    }
+}, [user]);
 
   // Filter & Sorting Logic
   const processedNotes = notes
@@ -73,6 +105,10 @@ export default function LandingPage() {
           <option value="2">Last Edited</option>
           <option value="3">Recently Created</option>
         </select>
+
+        <button onClick={handleLogout} className="bg-[#437993] text-white font-bold px-4 py-2 rounded mt-auto w-[150px] hover:bg-[#437993]">
+          Logout
+        </button>
       </nav>
 
       {/* Notes List */}
