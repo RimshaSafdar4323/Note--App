@@ -18,7 +18,7 @@ export const loginUser = async (req, res) => {
     res.status(400).json({ message: error.message });
   };
 };
-
+//signup
 //signup user
 export const signupUser = async (req, res) => {
   const { email, password } = req.body;
