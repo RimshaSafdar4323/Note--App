@@ -14,41 +14,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [processingAPI, setProcessingAPI] = useState(false);
 
-
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const noteId = searchParams.get("id");
-
   const { user } = useAuthContext();
 
-
-
-
-  // Fetch Single Note when noteId is available in URL
-  // useEffect(() => {
-  //   if (noteId) {
-  //     setLoading(true);
-  //     fetch(`${URL}/${noteId}`)
-  //       .then((res) => {
-  //         if (!res.ok) {
-  //           throw new Error("Note not found");
-  //         }
-  //         return res.json();
-  //       })
-  //       .then((data) => {
-  //         setTitle(data.title);
-  //         setBody(data.body);
-  //         setLoading(false);
-  //       })
-  //       .catch((err) => {
-  //         toast.error(err.message);
-  //         setLoading(false);
-  //       });
-  //   } else {
-  //     setTitle("");
-  //     setBody("");
-  //   }
-  // }, [noteId]);
 
   useEffect(() => {
   if (noteId && user) {

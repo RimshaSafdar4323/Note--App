@@ -1,14 +1,12 @@
 import Header from "../components/Header";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 import { useSignup } from "../hooks/useSignup";
 
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
   const { signup, isLoading, error } = useSignup();
 
   const handleSubmit = async (e) => {
