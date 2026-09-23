@@ -83,9 +83,7 @@ export const createNote = async (req, res) => {
     });
 
     if (notesCount >= 5 && !req.user.subscription) {
-      return res.status(403).json({
-        message: "Please subscribe to create more notes."
-      });
+      return res.status(403).send("Please subscribe to create more notes.");
     }
 
     const newNote = new Note({
@@ -102,6 +100,9 @@ export const createNote = async (req, res) => {
     res.status(500).send("Error in Creating Note");
   }
 };
+
+
+
 
 export const updateNote = async (req, res) => {
   const { error } = validateNote(req.body);

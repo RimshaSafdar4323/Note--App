@@ -26,14 +26,14 @@ export default function Login() {
       <div className="flex justify-center items-center mt-[90px]">
         <form
           onSubmit={handleLogin}
-           autocomplete="off"
+           autoComplete="off"
           className="w-[350px] flex flex-col gap-[15px] rounded-[10px]"
         >
           <h2 className="text-2xl font-bold text-center">Login</h2>
           <input
             type="email"
             placeholder="Email"
-            autocomplete="off"
+            autoComplete="off"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="border border-black rounded-[5px] py-[10px] px-[10px] focus:outline-none focus:ring-2 focus:ring-black"
@@ -41,7 +41,7 @@ export default function Login() {
           <input
             type="password"
             value={password}
-            autocomplete="off"
+            autoComplete="off"
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             className="border border-black rounded-[5px] py-[10px] px-[10px] focus:outline-none focus:ring-2 focus:ring-black"

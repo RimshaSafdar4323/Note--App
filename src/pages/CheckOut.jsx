@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../lib/utils";
-import { createCheckoutSession } from "../../backend/controllers/subscriptionController";
 
 export default function CheckOut() {
 
