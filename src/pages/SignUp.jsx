@@ -1,6 +1,6 @@
 import Header from "../components/Header";
 import { useState } from "react";
-import { Toaster } from "react-hot-toast";
+import toast,{ Toaster } from "react-hot-toast";
 import { useSignup } from "../hooks/useSignup";
 
 
@@ -16,17 +16,6 @@ export default function SignUp() {
   //     toast.error("All fields are required");
   //     return;
   //   }
-  //   try {
-  //     const response = await fetch(`${URL}/signup`, {
-  //       method: "POST",
-  //       headers: {
-  //          "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         email,
-  //         password,
-  //       }),
-  //     });
 
   //     if (response.ok) {
   //       setEmail("");
@@ -36,9 +25,6 @@ export default function SignUp() {
   //       const errText = await response.text();
   //       toast.error(errText);
   //     }
-  //   } catch (error) {
-  //     toast.error("Server connection failed");
-  //   }
   };
 
   return (

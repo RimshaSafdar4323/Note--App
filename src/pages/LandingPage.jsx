@@ -20,23 +20,6 @@ export default function LandingPage() {
       logout();
     }
 
-  // Fetch all notes from Express Backend
-  // useEffect(() => {
-  //   fetch(URL)
-  //     .then((res) => {
-  //       if (!res.ok) throw new Error("Failed to fetch notes");
-  //       return res.json();
-  //     })
-  //     .then((data) => {
-  //       setNotes(data);
-  //       setLoading(false);
-  //     })
-  //     .catch((err) => {
-  //       console.error(err);
-  //       setLoading(false);
-  //     });
-  // }, []);
-
   useEffect(() => {
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -61,6 +44,18 @@ export default function LandingPage() {
       navigate("/landing");
     }
 }, [user]);
+
+const handleCheckout = async() =>{
+  try{
+    const data = await fetch(URL,{
+      note
+
+    });
+    window.location.href= data.url;
+  }catch(error){
+    console.error(error);
+  }
+}
 
   // Filter & Sorting Logic
   const processedNotes = notes
@@ -109,6 +104,12 @@ export default function LandingPage() {
         <button onClick={handleLogout} className="bg-[#437993] text-white font-bold px-4 py-2 rounded mt-auto w-[150px] hover:bg-[#437993]">
           Logout
         </button>
+        <button
+        onClick={() => navigate("/checkout")}
+        className="bg-[#437993] text-white font-bold px-4 py-2 rounded mt-auto w-[150px] hover:bg-[#437993]"
+      >
+        Check Out
+      </button>
       </nav>
 
       {/* Notes List */}
@@ -130,7 +131,7 @@ export default function LandingPage() {
 
       <button
         onClick={() => navigate("/home")}
-        className="bg-[#437993] fixed bottom-6 right-6 hover:opacity-90 text-white p-5 rounded-lg cursor-pointer shadow-lg font-medium"
+        className="bg-[#437993] fixed bottom-6 right-4 hover:opacity-90 text-white p-5 rounded-lg cursor-pointer shadow-lg font-medium"
       >
         Create New Note
       </button>
